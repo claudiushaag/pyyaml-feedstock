@@ -1,0 +1,81 @@
+context:
+  version: 6.0.3
+
+package:
+  name: pyyaml
+  version: ${{ version }}
+
+source:
+  url: https://pypi.org/packages/source/P/PyYAML/pyyaml-${{ version }}.tar.gz
+  sha256: d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f
+  patches:
+    - 0001-Ensure-we-do-not-end-up-wih-CRLF-line-endings-on-tes.patch
+
+build:
+  number: 0
+  if use_noarch:
+  then:
+    noarch: python
+    track_features:
+      - pyyaml_no_compile
+
+requirements:
+  build:
+    - if build_platform != target_platform:
+      then:
+      - python                            
+      - cross-python_{{ target_platform }}
+      - cython                            
+    - {{ compiler('c') }}
+    - {{ stdlib("c") }}
+  host:
+    - if use_noarch:
+      then:
+        - python {{ python_min }}.*     # [use_noarch]
+      else:
+        - python                        # [not use_noarch]
+    - cython
+    - setuptools
+    - packaging
+    - pip
+    - yaml
+  run:
+    - if use_noarch:
+      then:
+        - python                        # [not use_noarch]
+      else:
+        - python >={{ python_min }}.*   # [use_noarch]
+    - yaml
+
+test:
+  imports:
+    - yaml
+    - if python_impl == "cpython" and not use_noarch:
+      then:
+        - _yaml   # [python_impl == "cpython" and not use_noarch]
+  commands:
+    # temporarily skipping pip check on win and pypy build because of bizarre tqdm issue
+    - if not (win and python_impl == 'pypy'):
+      then:
+        - pip check  # [not (win and python_impl == 'pypy')]
+  requires:
+    - pip
+    - if use_noarch:
+      then:
+        - python {{ python_min }}.*     # [use_noarch]
+
+about:
+  home: http://pyyaml.org/wiki/PyYAML
+  license_file: LICENSE
+  license: MIT
+  license_family: MIT
+  summary: YAML parser and emitter for Python
+  dev_url: https://github.com/yaml/pyyaml
+  doc_url: http://pyyaml.org/wiki/PyYAML
+
+extra:
+  recipe-maintainers:
+    - jakirkham
+    - msarahan
+    - pelson
+    - ocefpaf
