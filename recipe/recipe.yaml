@@ -12,7 +12,7 @@ source:
     - 0001-Ensure-we-do-not-end-up-wih-CRLF-line-endings-on-tes.patch
 
 build:
-  number: 0
+  number: 1
   # skip: true  # [py<38] lost completely, b/c python_min==3.10
   noarch: ${{ "python" if use_noarch }} # [use_noarch]
   variant:
