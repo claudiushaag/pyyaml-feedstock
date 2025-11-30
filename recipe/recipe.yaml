@@ -54,16 +54,11 @@ tests:
   - python:
       imports:
         - yaml
-        - if python_impl == "cpython" and not use_noarch:
-            then:
-              - _yaml   # [python_impl == "cpython" and not use_noarch]
-        # temporarily skipping pip check on win and pypy build because of bizarre tqdm issue
-      if not (win and python_impl == 'pypy'):
-        then:
-          pip_check: true  # [not (win and python_impl == 'pypy')]
-      if use_noarch:
-      then:
-        python_version: ${{ python_min }}.*     # [use_noarch]
+        - if: python_impl == "cpython" and not use_noarch # [python_impl == "cpython" and not use_noarch]
+          then: _yaml
+      # temporarily skipping pip check on win and pypy build because of bizarre tqdm issue
+      pip_check: ${{ true if not (win and python_impl == 'pypy') else false }} # [not (win and python_impl == 'pypy')]
+      python_version: ${{ python_min + ".*" if use_noarch }} # [use_noarch]
 
 about:
   homepage: http://pyyaml.org/wiki/PyYAML
