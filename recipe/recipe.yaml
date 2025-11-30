@@ -13,25 +13,27 @@ source:
 
 build:
   number: 0
-  if use_noarch:
-  then:
-    noarch: python
-    track_features:
-      - pyyaml_no_compile
+  # skip: true  # [py<38] lost completely, b/c python_min==3.10
+  noarch: ${{ "python" if use_noarch }} # [use_noarch]
+  variant:
+    use_keys:
+      - use_noarch
+    down_prioritize_variant: ${{ 1 if use_noarch else 0 }} # track_features: - pyyaml_no_compile    # [use_noarch]
 
 requirements:
   build:
-    - if build_platform != target_platform:
+    - if: build_platform != target_platform # [build_platform != target_platform]
       then:
-      - python                            
-      - cross-python_{{ target_platform }}
-      - cython                            
-    - {{ compiler('c') }}
-    - {{ stdlib("c") }}
+        - python
+        - cross-python_${{ target_platform }}
+        - cython
+    - ${{ compiler('c') }}
+    - ${{ stdlib("c") }}
+
   host:
-    - if use_noarch:
+    - if: use_noarch
       then:
-        - python {{ python_min }}.*     # [use_noarch]
+        - python ${{ python_min }}.*    # [use_noarch]
       else:
         - python                        # [not use_noarch]
     - cython
@@ -39,39 +41,38 @@ requirements:
     - packaging
     - pip
     - yaml
+
   run:
-    - if use_noarch:
+    - if: use_noarch
       then:
-        - python                        # [not use_noarch]
+        - python                       # [not use_noarch]
       else:
-        - python >={{ python_min }}.*   # [use_noarch]
+        - python >=${{ python_min }}   # [use_noarch]
     - yaml
 
-test:
-  imports:
-    - yaml
-    - if python_impl == "cpython" and not use_noarch:
+tests:
+  - python:
+      imports:
+        - yaml
+        - if python_impl == "cpython" and not use_noarch:
+            then:
+              - _yaml   # [python_impl == "cpython" and not use_noarch]
+        # temporarily skipping pip check on win and pypy build because of bizarre tqdm issue
+      if not (win and python_impl == 'pypy'):
+        then:
+          pip_check: true  # [not (win and python_impl == 'pypy')]
+      if use_noarch:
       then:
-        - _yaml   # [python_impl == "cpython" and not use_noarch]
-  commands:
-    # temporarily skipping pip check on win and pypy build because of bizarre tqdm issue
-    - if not (win and python_impl == 'pypy'):
-      then:
-        - pip check  # [not (win and python_impl == 'pypy')]
-  requires:
-    - pip
-    - if use_noarch:
-      then:
-        - python {{ python_min }}.*     # [use_noarch]
+        python_version: ${{ python_min }}.*     # [use_noarch]
 
 about:
-  home: http://pyyaml.org/wiki/PyYAML
+  homepage: http://pyyaml.org/wiki/PyYAML
   license_file: LICENSE
   license: MIT
   license_family: MIT
   summary: YAML parser and emitter for Python
-  dev_url: https://github.com/yaml/pyyaml
-  doc_url: http://pyyaml.org/wiki/PyYAML
+  repository: https://github.com/yaml/pyyaml
+  documentation: http://pyyaml.org/wiki/PyYAML
 
 extra:
   recipe-maintainers:
